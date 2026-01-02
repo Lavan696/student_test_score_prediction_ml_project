@@ -116,6 +116,10 @@ These results indicate strong generalization with low variance between CV and te
 
 ---
 
+### Kaggle Public Score
+8.87160
+
+---
 ## Visualizations & Interpretability
 - Histograms and KDE plots for feature distributions
 - Boxplots for categorical feature impact
