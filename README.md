@@ -1,31 +1,30 @@
-# Student Exam Score Prediction (Regression)
+# Student Exam Score Prediction with Stacking Ensemble
 
 ## Project Overview
-This project builds a **leakage-safe machine learning pipeline** to predict **student exam scores** using demographic, academic, lifestyle, and institutional features.
+This project focuses on **predicting student exam scores** using a progressively enhanced machine learning approach:
 
-The workflow follows strong **machine learning best practices**, including:
-- Extensive exploratory data analysis (EDA)
-- Clear separation of ordinal and nominal categorical features
-- Proper preprocessing with `ColumnTransformer`
-- Feature engineering inside pipelines
-- Leakage-free cross-validation
-- Robust evaluation using multiple regression metrics
-- Model persistence for reuse and deployment
+**Linear Regression → LightGBM → Stacked Ensemble**
 
-The final model is a **Linear Regression** baseline focused on **interpretability and stability**.
+The solution is designed with a strong emphasis on:
+- Leakage-safe preprocessing
+- Robust feature engineering
+- Proper out-of-fold (OOF) stacking
+- Transparent evaluation
+- Kaggle-ready deployment
+
+The final stacked model achieves **improved generalization and Kaggle performance** over individual base models.
 
 ---
 
 ## Dataset Description
 - **Source:** Kaggle (Student Exam Performance Regression Dataset)
 - **Files Used:**
-  - `train.csv` – Training dataset (includes target)
-  - `test.csv` – Test dataset (no target)
+  - `train.csv` – Training data with target variable
+  - `test.csv` – Test data for submission
   - `sample_submission.csv` – Submission format
-- **Target Variable:**  
-  - `exam_score` (continuous)
+- **Target Variable:** `exam_score` (continuous)
 
-### Feature Groups
+### Feature Categories
 - **Demographic:** `age`, `gender`
 - **Academic:** `study_hours`, `class_attendance`, `course`, `study_method`
 - **Lifestyle:** `sleep_hours`, `sleep_quality`
@@ -35,97 +34,96 @@ The final model is a **Linear Regression** baseline focused on **interpretabilit
 ---
 
 ## Exploratory Data Analysis (EDA)
-Key EDA steps include:
-- Distribution analysis for numerical features (age, study hours, sleep hours)
-- Boxplots for categorical features vs. exam score
-- Regression plots to inspect linear trends
-- Category frequency analysis for imbalance detection
-
-Visualizations were created using **Matplotlib** and **Seaborn**.
+EDA was conducted to understand feature distributions and relationships:
+- Histograms & KDE plots for numerical variables
+- Boxplots for categorical variables vs exam score
+- Regression plots for linear trend inspection
+- Category frequency analysis to detect imbalance
 
 ---
 
-## Feature Engineering & Preprocessing
+## Preprocessing & Feature Engineering
 
-### Categorical Feature Handling
+### Encoding Strategy
 - **Binary Encoding**
-  - `internet_access` → `yes = 1`, `no = 0`
-- **Ordinal Encoding**
-  - `exam_difficulty`: easy < moderate < hard
-  - `facility_rating`: low < medium < high
-  - `sleep_quality`: poor < average < good
-- **One-Hot Encoding**
+  - `internet_access` → {yes: 1, no: 0}
+- **Target Mean Encoding (Ordinal Features)**
+  - `exam_difficulty`
+  - `facility_rating`
+  - `sleep_quality`
+- **One-Hot Encoding (Nominal Features)**
   - `study_method`, `course`, `gender`
-  - `handle_unknown='ignore'` for robustness
+  - `handle_unknown='ignore'`
+- **Numerical Scaling**
+  - StandardScaler applied to numerical features
 
-### Numerical Features
-- Standardized using `StandardScaler`:
-  - `age`
-  - `study_hours`
-  - `class_attendance`
-  - `sleep_hours`
-
-### Engineered Features
-Created **after preprocessing** to avoid leakage:
-- `quality_sleep_hours`  
-  → `sleep_hours × (sleep_quality_encoded + 1)`
-- `attended_study_hours`  
-  → `study_hours × class_attendance`
-
-All preprocessing and feature engineering are performed **inside pipelines**.
+### Engineered Interaction Features
+Created **inside pipelines** to prevent leakage:
+- **Quality-adjusted sleep hours**
+  - `sleep_hours × sleep_quality_target_mean`
+- **Attendance-weighted study hours**
+  - `study_hours × class_attendance`
 
 ---
 
-## Model Used
-- **Algorithm:** Linear Regression (`sklearn.linear_model.LinearRegression`)
-- Chosen for:
-  - Interpretability
-  - Strong baseline performance
-  - Low variance on large datasets
+## Models & Progressive Learning Strategy
+
+### 1️⃣ Linear Regression (Baseline)
+- Captures global linear trends
+- High interpretability
+- Serves as a strong baseline and complementary learner
+
+### 2️⃣ LightGBM Regressor
+- Models non-linear interactions
+- Handles threshold effects and complex feature relationships
+- Tuned for stability and generalization
+
+### 3️⃣ Stacked Ensemble (Final Model)
+- **Base models:** Linear Regression + LightGBM
+- **Meta-learner:** Ridge Regression
+- Trained on **out-of-fold predictions** to avoid leakage
+- Combines linear and non-linear learning strengths
 
 ---
 
 ## Evaluation Strategy
 
-### Cross-Validation
-- **Method:** 10-Fold Cross-Validation
-- **Pipeline:**  
-  `Preprocessing → Feature Engineering → Linear Regression`
-- Ensures:
-  - No data leakage
-  - Fair performance estimation
+### Out-of-Fold (OOF) Stacking
+- K-Fold CV used to generate unbiased base model predictions
+- Pipelines cloned and refit per fold
+- OOF prediction correlation checked to ensure complementarity
 
-#### Cross-Validation Results
-| Metric    | Value        |
-|-----------|--------------|
-| Mean RMSE | **8.8952**   |
-| Std RMSE  | **± 0.0168** |
+**OOF RMSE (Linear + LGBM Stack):** **8.778**
 
 ---
 
-### Test Set Performance
-Evaluated on a held-out test split.
+## Model Performance Comparison (Test Set)
 
-| Metric   | Value     |
-|----------|-----------|
-| RMSE     | **8.700** |
-| MAE      | **6.929** |
-| R² Score | **0.786** |
+| Model                             | RMSE      | MAE       | R²        |
+|-----------------------------------|-----------|-----------|-----------|
+| Linear Regression                 | 8.710     | 6.937     | 0.785     |
+| LightGBM Regressor                | 8.575     | 6.814     | 0.792     |
+| **Stacked Model (Linear + LGBM)** | **8.572** | **6.809** | **0.792** |
 
-These results indicate strong generalization with low variance between CV and test performance.
+✅ The stacked model provides the **best overall performance**, with lower error and stable variance.
+
+---
+
+## Kaggle Performance
+- **Public Leaderboard RMSE:** **8.746**
+- Performance improvement achieved through:
+  - Target mean encoding
+  - Feature interactions
+  - Leakage-safe stacking ensemble
 
 ---
 
-### Kaggle Public Score
-8.87160
-
----
-## Visualizations & Interpretability
-- Histograms and KDE plots for feature distributions
-- Boxplots for categorical feature impact
-- Regression plots for linear trend inspection
-- Feature engineering designed for interpretability
-
+## Diagnostics & Interpretability
+- Actual vs Predicted plots (OOF)
+- Residual vs Prediction analysis
+- Residual distribution inspection
+- Meta-model coefficients reveal contribution of base learners
+  
 ---
 
 ## Tech Stack
