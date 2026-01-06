@@ -128,10 +128,11 @@ Created **inside pipelines** to prevent leakage:
 
 ## Tech Stack
 - **Python**
-- **Libraries**
 - pandas, numpy
 - matplotlib, seaborn
 - scikit-learn
+- lightgbm
+- category_encoders
 - joblib
 
 ---
