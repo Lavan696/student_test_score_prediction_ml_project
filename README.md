@@ -150,13 +150,6 @@ The modeling followed a **progressive and explainable approach**.
 
 ---
 
-## Future Improvements
-
-- REST API deployment using FastAPI
-- Containerization using Docker
-
----
-
 ## Repository Structure
 
 student-performance-prediction/
@@ -172,13 +165,20 @@ student-performance-prediction/
 │   └── kaggle_test_submission.csv
 │
 ├── data/
-│   └── README.md          # Instructions to download dataset
+│   └── README.md     
 │
 ├── .gitignore
 │
 ├── requirements.txt
 │
 └── README.md
+
+## Future Improvements
+
+- REST API deployment using FastAPI
+- Containerization using Docker
+
+---
 
 ## Author  
 
