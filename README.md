@@ -1,147 +1,186 @@
-# Student Exam Score Prediction with Stacking Ensemble
+# Student Performance Prediction  
+### An End-to-End Machine Learning Pipeline with Stacking Ensemble
 
-## Project Overview
-This project focuses on **predicting student exam scores** using a progressively enhanced machine learning approach:
+## Overview
 
-**Linear Regression → LightGBM → Stacked Ensemble**
+Educational institutions often struggle to identify students who may underperform until final evaluations are conducted.  
+This project builds an **end-to-end machine learning system** to predict student exam scores using demographic, academic, and behavioral features.
 
-The solution is designed with a strong emphasis on:
-- Leakage-safe preprocessing
-- Robust feature engineering
-- Proper out-of-fold (OOF) stacking
-- Transparent evaluation
-- Kaggle-ready deployment
+Beyond achieving competitive predictive performance, the focus of this project is on:
+- Robust evaluation using cross-validation
+- Interpretability and modeling rationale
+- Reproducible and deployment-ready ML pipelines
 
-The final stacked model achieves **improved generalization and Kaggle performance** over individual base models.
+The solution progresses from simple, interpretable models to a carefully designed ensemble to balance performance and stability.
+
+---
+## Dataset Information
+
+This project uses the **Student Test Scores Prediction** dataset from Kaggle.
+- **Dataset Size**: ~630,000 samples
+
+A small held-out test set is used due to the large dataset size, ensuring sufficient data for training while maintaining reliable evaluation.
+
+Due to Kaggle’s data usage and licensing policies, the raw dataset files are
+**not included** in this repository.
+
+### Reproducing the results
+
+To run the notebook locally, users should:
+
+1. Download the dataset from the Kaggle competition  
+   **Student Test Scores Prediction**
+2. Extract the files `train.csv` and `test.csv`
+3. Place them in the following directory structure
 
 ---
 
-## Dataset Description
-- **Source:** Kaggle (Student Exam Performance Regression Dataset)
-- **Files Used:**
-  - `train.csv` – Training data with target variable
-  - `test.csv` – Test data for submission
-  - `sample_submission.csv` – Submission format
-- **Target Variable:** `exam_score` (continuous)
+## Approach
 
-### Feature Categories
-- **Demographic:** `age`, `gender`
-- **Academic:** `study_hours`, `class_attendance`, `course`, `study_method`
-- **Lifestyle:** `sleep_hours`, `sleep_quality`
-- **Institutional:** `facility_rating`, `internet_access`
-- **Assessment:** `exam_difficulty`
+### 1. Exploratory Data Analysis (EDA)
 
----
+EDA was performed to understand:
+- Target distribution
+- Feature distributions
+- Relationships between key features and exam scores
 
-## Exploratory Data Analysis (EDA)
-EDA was conducted to understand feature distributions and relationships:
-- Histograms & KDE plots for numerical variables
-- Boxplots for categorical variables vs exam score
-- Regression plots for linear trend inspection
-- Category frequency analysis to detect imbalance
+Key observations from EDA guided:
+- Feature selection
+- Encoding strategies
+- Model choice
 
 ---
 
-## Preprocessing & Feature Engineering
+### 2. Feature Engineering & Preprocessing
 
-### Encoding Strategy
-- **Binary Encoding**
-  - `internet_access` → {yes: 1, no: 0}
-- **Target Mean Encoding (Ordinal Features)**
-  - `exam_difficulty`
-  - `facility_rating`
-  - `sleep_quality`
-- **One-Hot Encoding (Nominal Features)**
-  - `study_method`, `course`, `gender`
-  - `handle_unknown='ignore'`
-- **Numerical Scaling**
-  - StandardScaler applied to numerical features
+The preprocessing pipeline includes:
 
-### Engineered Interaction Features
-Created **inside pipelines** to prevent leakage:
-- **Quality-adjusted sleep hours**
-  - `sleep_hours × sleep_quality_target_mean`
+- **Ordinal categorical features**  
+  → Target Mean Encoding  
+  (`exam_difficulty`, `facility_rating`, `sleep_quality`)
+
+- **Nominal categorical features**  
+  → One-Hot Encoding  
+  (`study_method`, `course`, `gender`)
+
+- **Binary feature**  
+  → Manual mapping  
+  (`internet_access`)
+
+- **Numerical features**  
+  → Standard Scaling  
+
+#### Custom Interaction Features
+Domain-inspired features were introduced:
+- **Quality-adjusted sleep hours**  
 - **Attendance-weighted study hours**
-  - `study_hours × class_attendance`
+
+These interactions help capture real-world effects that linear and tree-based models exploit differently.
 
 ---
 
-## Models & Progressive Learning Strategy
+## Modeling Strategy
 
-### 1️⃣ Linear Regression (Baseline)
+The modeling followed a **progressive and explainable approach**.
+
+### Baseline Model — Linear Regression
 - Captures global linear trends
 - High interpretability
-- Serves as a strong baseline and complementary learner
+- Strong baseline performance
 
-### 2️⃣ LightGBM Regressor
-- Models non-linear interactions
-- Handles threshold effects and complex feature relationships
-- Tuned for stability and generalization
+### Non-Linear Model — LightGBM Regressor
+- Models non-linear interactions and threshold effects
+- Controlled via explicit regularization and depth constraints
+- Improves performance on complex patterns
 
-### 3️⃣ Stacked Ensemble (Final Model)
-- **Base models:** Linear Regression + LightGBM
-- **Meta-learner:** Ridge Regression
-- Trained on **out-of-fold predictions** to avoid leakage
-- Combines linear and non-linear learning strengths
+### Final Model — Stacked Ensemble
+- Combines Linear Regression and LightGBM using a Ridge meta-model
+- Uses **out-of-fold (OOF) predictions** to prevent leakage
+- Improves stability and generalization rather than aggressively chasing leaderboard gains
 
 ---
 
 ## Evaluation Strategy
 
-### Out-of-Fold (OOF) Stacking
-- K-Fold CV used to generate unbiased base model predictions
-- Pipelines cloned and refit per fold
-- OOF prediction correlation checked to ensure complementarity
-
-**OOF RMSE (Linear + LGBM Stack):** **8.778**
+- **Primary metric**: RMSE (competition metric)
+- Cross-validation with OOF predictions for stacking
+- Separate held-out test set for final evaluation
+- Residual diagnostics to assess bias and variance behavior
 
 ---
 
-## Model Performance Comparison (Test Set)
+## Model Performance (Test Set)
 
-| Model                             | RMSE      | MAE       | R²        |
-|-----------------------------------|-----------|-----------|-----------|
-| Linear Regression                 | 8.710     | 6.937     | 0.785     |
-| LightGBM Regressor                | 8.575     | 6.814     | 0.792     |
-| **Stacked Model (Linear + LGBM)** | **8.572** | **6.809** | **0.792** |
-
-✅ The stacked model provides the **best overall performance**, with lower error and stable variance.
+| Model | RMSE | MAE | R² |
+|------|------|------|----|
+| Linear Regression | — | — | — |
+| LightGBM Regressor | — | — | — |
+| Stacked Model (Linear + LightGBM) | — | — | — |
 
 ---
 
-## Kaggle Performance
-- **Public Leaderboard RMSE:** **8.746**
-- Performance improvement achieved through:
-  - Target mean encoding
-  - Feature interactions
-  - Leakage-safe stacking ensemble
+## Key Learnings
+
+- Simple linear models can perform strongly when features are well-designed
+- Non-linear models add value by capturing interactions and threshold effects
+- Stacking improves **stability and generalization**, not just raw performance
+- Proper cross-validation and OOF predictions are critical for reliable ensembles
 
 ---
 
-## Diagnostics & Interpretability
-- Actual vs Predicted plots (OOF)
-- Residual vs Prediction analysis
-- Residual distribution inspection
-- Meta-model coefficients reveal contribution of base learners
-  
+## Inference & Deployment Readiness
+
+- Unified inference function ensures training–inference consistency
+- Full model bundle (base pipelines + meta-model) is serialized using `joblib`
+- Ready for:
+  - Batch prediction
+  - REST API deployment (e.g., FastAPI)
+  - Integration into larger systems
+
 ---
 
 ## Tech Stack
-- **Python**
-- pandas, numpy
-- matplotlib, seaborn
+
+- Python
+- pandas, NumPy
 - scikit-learn
-- lightgbm
-- category_encoders
-- joblib
+- LightGBM
+- category-encoders
+- Matplotlib, Seaborn
 
 ---
 
-## Model Persistence
-- Model saved using **joblib**
-  
+## Future Improvements
+
+- REST API deployment using FastAPI
+- Containerization using Docker
+
 ---
- ## Author  
+
+## Repository Structure
+
+student-performance-prediction/
+│
+├── notebook/
+│   └── student_score_prediction.ipynb
+│
+├── artifacts/
+│   └── student_score_stacked_model.joblib
+│
+├── outputs/
+│   ├── model_comparison_metrics.csv
+│   └── kaggle_test_submission.csv
+│
+├── data/
+│   └── README.md          # Instructions to download dataset
+│
+├── .gitignore
+│
+├── requirements.txt
+│
+└── README.md
+
+## Author  
 
 **Lavan Kumar Konda**  
 - Student at NIT Andhra Pradesh  
