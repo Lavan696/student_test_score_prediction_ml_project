@@ -111,11 +111,11 @@ The modeling followed a **progressive and explainable approach**.
 
 ## Model Performance (Test Set)
 
-| Model | RMSE | MAE | R² |
-|------|------|------|----|
-| Linear Regression | — | — | — |
-| LightGBM Regressor | — | — | — |
-| Stacked Model (Linear + LightGBM) | — | — | — |
+| Model                             | RMSE   | MAE    | R2_Score |
+|-----------------------------------|--------|--------|----------|
+| Linear Regression                 | 8.7105 | 6.9377 |  0.7856  |
+| LightGBM Regressor                | 8.5755 | 6.8144 |  0.7922  |
+| Stacked Model (Linear + LightGBM) | 8.5727 | 6.8092 |  0.7923  |
 
 ---
 
@@ -151,27 +151,21 @@ The modeling followed a **progressive and explainable approach**.
 ---
 
 ## Repository Structure
-
+```
 student-performance-prediction/
-│
 ├── notebook/
-│   └── student_score_prediction.ipynb
-│
+│ └── student_score_prediction.ipynb
 ├── artifacts/
-│   └── student_score_stacked_model.joblib
-│
+│ └── student_score_stacked_model.joblib
 ├── outputs/
-│   ├── model_comparison_metrics.csv
-│   └── kaggle_test_submission.csv
-│
+│ ├── model_comparison_metrics.csv
+│ └── kaggle_test_submission.csv
 ├── data/
-│   └── README.md     
-│
-├── .gitignore
-│
+│ └── README.md
 ├── requirements.txt
-│
 └── README.md
+```
+---
 
 ## Future Improvements
 
